@@ -16,10 +16,11 @@ def test_build_paper_summaries_abstract_only() -> None:
     now = datetime(2026, 2, 16, 12, 0, tzinfo=timezone.utc)
     config = DetectorConfig(
         topics=["ai coding agent"],
+        topic_keywords={"ai coding agent": ["ai", "coding", "agent"]},
         daily_enable_paper_summaries=True,
         daily_enable_pdf_summaries=False,
     )
-    events = [
+    events = [他要是长个手的话，他就能把它吃了。告诉你个秘密。你要是能够搞到一个乒乓球，小猫会超开心，他在家一直追着那个球玩。嗯。
         EventItem(
             source="arxiv",
             topic="ai coding agent",
@@ -30,8 +31,9 @@ def test_build_paper_summaries_abstract_only() -> None:
         )
     ]
 
-    updated, rows = asyncio.run(build_paper_summaries(events=events, config=config, as_of=now))
+    updated, rows, stats = asyncio.run(build_paper_summaries(events=events, config=config, as_of=now))
     assert len(updated) == 1
     assert len(rows) == 1
     assert rows[0].abstract_summary
     assert updated[0].meta and "abstract_summary" in updated[0].meta
+    assert stats is not None

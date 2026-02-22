@@ -9,6 +9,10 @@ from src.opportunity_detector.models import EventItem
 def test_render_daily_event_report_has_sections() -> None:
     config = DetectorConfig(
         topics=["ai coding agent", "smb finance ops"],
+        topic_keywords={
+            "ai coding agent": ["ai", "coding", "agent"],
+            "smb finance ops": ["smb", "finance", "operations"],
+        },
         daily_days=1,
         daily_max_items_per_topic=3,
         daily_max_gdelt_items=12,
