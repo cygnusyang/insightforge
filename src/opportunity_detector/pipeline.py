@@ -162,7 +162,7 @@ def run_pipeline(config: DetectorConfig, out_dir: str | Path) -> tuple[list[Topi
     insights = build_topic_insights(raw_signals, scored)
     events = asyncio.run(collect_events(config))
     as_of = datetime.now()
-    events, paper_summaries = asyncio.run(
+    events, paper_summaries, paper_stats = asyncio.run(
         build_paper_summaries(events=events, config=config, as_of=as_of)
     )
 

@@ -20,7 +20,7 @@ def test_build_paper_summaries_abstract_only() -> None:
         daily_enable_paper_summaries=True,
         daily_enable_pdf_summaries=False,
     )
-    events = [他要是长个手的话，他就能把它吃了。告诉你个秘密。你要是能够搞到一个乒乓球，小猫会超开心，他在家一直追着那个球玩。嗯。
+    events = [
         EventItem(
             source="arxiv",
             topic="ai coding agent",

@@ -156,6 +156,44 @@ async def fetch_gdelt_counts(
     since_window = now - timedelta(days=window_days)
     since_recent = now - timedelta(days=recent_days)
 
+
+    # 自动分拆多词主题并合并计数
+    subtopics = [w for w in topic.split() if len(w) >= 3]
+    if len(subtopics) > 1:
+        window_total = 0
+        recent_total = 0
+        for sub in subtopics:
+            try:
+                payload = await _fetch_timeline(client, sub)
+            except Exception:
+                continue
+            timeline = payload.get("timeline", [])
+            points: list[dict] = []
+            if isinstance(timeline, list) and timeline:
+                first = timeline[0]
+                if isinstance(first, dict) and isinstance(first.get("data"), list):
+                    points = first.get("data", [])
+                else:
+                    points = timeline
+            elif isinstance(timeline, dict) and isinstance(timeline.get("data"), list):
+                points = timeline.get("data", [])
+            for point in points:
+                raw_date = str(point.get("date", ""))
+                if len(raw_date) < 8:
+                    continue
+                try:
+                    parsed = datetime.strptime(raw_date[:8], "%Y%m%d").replace(tzinfo=timezone.utc)
+                except ValueError:
+                    continue
+                if parsed < since_window:
+                    continue
+                volume = _safe_int(point.get("value", 0))
+                window_total += volume
+                if parsed >= since_recent:
+                    recent_total += volume
+        return max(window_total, 0), max(recent_total, 0)
+
+    # 单主题原有逻辑
     try:
         payload = await _fetch_timeline(client, topic)
     except Exception as e:

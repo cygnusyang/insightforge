@@ -8,6 +8,7 @@ from rich.table import Table
 
 from .config import load_config
 from .pipeline import run_pipeline
+from .validator import CLIValidator, validate_cli_args
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -28,6 +29,14 @@ def _build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = _build_parser()
     args = parser.parse_args()
+
+    # 验证 CLI 参数
+    try:
+        validate_cli_args(args.config, args.out)
+    except ValueError as e:
+        console = Console()
+        console.print(f"[red]参数验证失败:[/red] {e}")
+        return
 
     config = load_config(args.config)
     _, scored = run_pipeline(config, Path(args.out))

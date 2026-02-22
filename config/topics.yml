@@ -1,3 +1,20 @@
+# =============================================================================
+# 机会探测器配置文件
+# =============================================================================
+# 此文件定义了行业/产品机会探测器的核心配置，包括：
+# - 时间窗口设置：定义数据采集的时间范围
+# - 主题配置：定义需要监控的行业/产品主题及其关键词
+# - 权重配置：定义机会评分中各信号的权重
+# - 纸论文配置：定义学术论文采集和分析的参数
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 时间窗口配置
+# -----------------------------------------------------------------------------
+# window_days: 窗口总天数，用于采集历史数据（7-365）
+# recent_days: 近期天数，用于计算近期信号（必须小于 window_days）
+# daily_days: 每日天数，用于计算每日信号（必须小于等于 recent_days）
+# -----------------------------------------------------------------------------
 window_days: 30
 recent_days: 7
 
@@ -8,19 +25,74 @@ daily_enable_biz_event_queries: true
 daily_gdelt_biz_query_max_records: 6
 daily_max_papers_per_topic: 2
 daily_enable_paper_summaries: true
-daily_enable_pdf_summaries: false
+daily_enable_pdf_summaries: true
 daily_max_paper_pdfs: 2
 daily_pdf_max_pages: 4
 papers_cache_dir: outputs/papers_cache
 
+# -----------------------------------------------------------------------------
+# 论文配置（FUNC-005A/B 增强）
+# -----------------------------------------------------------------------------
+paper_config:
+  enable_pdf_download: true
+  max_pdfs: 2
+  max_pages: 4
+  download_timeout: 60
+  summary_max_tokens: 2000
+  enable_cache: true
+  cache_ttl_days: 7
+  cache_dir: outputs/papers_cache
+
+# -----------------------------------------------------------------------------
+# 权重配置（FUNC-016）
+# -----------------------------------------------------------------------------
+# demand: 需求信号权重
+# momentum: 动量信号权重
+# competition: 竞争信号权重
+# 注意：三个权重之和必须为 1.0
+# -----------------------------------------------------------------------------
 weights:
   demand: 0.45
   momentum: 0.35
   competition: 0.20
 
+# -----------------------------------------------------------------------------
+# 主题配置（FUNC-014, FUNC-018）
+# -----------------------------------------------------------------------------
+# topics: 需要监控的主题列表
+# topic_keywords: 每个主题对应的关键词列表
+# 注意：每个 topic 必须在 topic_keywords 中有对应的条目
+# -----------------------------------------------------------------------------
 topics:
   - "AI coding agent"
   - "vertical saas for clinics"
   - "workflow automation for logistics"
   - "SMB finance ops"
   - "B2B customer support copilot"
+
+topic_keywords:
+  # AI 编程助手相关主题
+  "AI coding agent":
+    - "coding agent"
+    - "ai assistant"
+    - "developer tool"
+  # 医疗垂直 SaaS 相关主题
+  "vertical saas for clinics":
+    - "vertical saas"
+    - "clinic management"
+    - "healthcare it"
+  # 物流工作流自动化相关主题
+  "workflow automation for logistics":
+    - "workflow automation"
+    - "logistics tech"
+    - "supply chain automation"
+  # 中小企业财务运营相关主题
+  "SMB finance ops":
+    - "smb finance"
+    - "finance operations"
+    - "accounting automation"
+  # B2B 客户支持助手相关主题
+  "B2B customer support copilot":
+    - "b2b support"
+    - "customer copilot"
+    - "enterprise support"
