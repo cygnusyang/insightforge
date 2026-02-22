@@ -69,7 +69,7 @@ def build_review_pack(
 ) -> str:
     now = datetime.now()
     lines: list[str] = []
-    lines.append("# Hunter 定时检查包（给大模型的上下文）")
+    lines.append("# InsightForge 定时检查包（给大模型的上下文）")
     lines.append("")
     lines.append(f"- generated_at: {now.isoformat(timespec='seconds')}")
     lines.append(f"- repo_root: {repo_root}")
@@ -149,7 +149,7 @@ def build_review_pack(
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="为大模型生成 Hunter 工程的定时检查上下文包")
+    parser = argparse.ArgumentParser(description="为大模型生成 InsightForge 工程的定时检查上下文包")
     parser.add_argument(
         "--out",
         default="outputs/review/latest.md",

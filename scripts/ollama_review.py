@@ -9,7 +9,7 @@ import httpx
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="调用 Ollama，为 Hunter 生成工程/机会优化建议")
+    parser = argparse.ArgumentParser(description="调用 Ollama，为 InsightForge 生成工程/机会优化建议")
     parser.add_argument("--base-url", required=True, help="Ollama 服务地址，如 http://127.0.0.1:11434")
     parser.add_argument("--model", required=True, help="模型名，如 llama3.2:latest / qwen2.5:14b")
     parser.add_argument("--in", dest="in_path", required=True, help="输入 review pack 路径（Markdown）")
@@ -51,7 +51,7 @@ def call_ollama_generate(
 
     system = (
         "你是一个资深软件工程师 + 产品策略顾问。"
-        "你会基于给定的 Hunter 上下文，输出可执行的工程优化与产品机会建议。"
+        "你会基于给定的 InsightForge 上下文，输出可执行的工程优化与产品机会建议。"
         "请用中文输出，结构清晰，尽量给出具体改动点/命令/文件路径。"
     )
     prompt = f"{system}\n\n{prompt_md}".strip()
@@ -99,7 +99,7 @@ def call_ollama_chat(
 
     system = (
         "你是一个资深软件工程师 + 产品策略顾问。"
-        "你会基于给定的 Hunter 上下文，输出可执行的工程优化与产品机会建议。"
+        "你会基于给定的 InsightForge 上下文，输出可执行的工程优化与产品机会建议。"
         "请用中文输出，结构清晰，尽量给出具体改动点/命令/文件路径。"
     )
 
@@ -184,7 +184,7 @@ def main() -> None:
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     header = [
-        "# Hunter LLM 建议（Ollama）",
+        "# InsightForge LLM 建议（Ollama）",
         "",
         f"- generated_at: {datetime.now().isoformat(timespec='seconds')}",
         f"- base_url: {args.base_url}",

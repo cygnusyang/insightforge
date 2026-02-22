@@ -1,4 +1,4 @@
-# 定时任务：周期性运行 Hunter，并生成“大模型检查包”
+# 定时任务：周期性运行 InsightForge，并生成“大模型检查包”
 
 下面给出 3 种常见方式（你选一种即可）：本机 `cron` / macOS `launchd` / CI（GitHub Actions）。
 
@@ -32,13 +32,13 @@ crontab -e
 2) 添加一行（注意把路径改成你本机实际路径）：
 
 ```cron
-0 */2 * * * cd /ABS/PATH/TO/hunter && bash scripts/scheduled_run.sh >> outputs/logs/cron.log 2>&1
+0 */2 * * * cd /ABS/PATH/TO/insightforge && bash scripts/scheduled_run.sh >> outputs/logs/cron.log 2>&1
 ```
 
 如果你要 **每 1 分钟跑一次**（注意：一次运行可能超过 1 分钟，脚本内置了锁，会在上一次未结束时自动跳过本次）：
 
 ```cron
-* * * * * cd /ABS/PATH/TO/hunter && bash scripts/scheduled_run.sh >> outputs/logs/cron.log 2>&1
+* * * * * cd /ABS/PATH/TO/insightforge && bash scripts/scheduled_run.sh >> outputs/logs/cron.log 2>&1
 ```
 
 建议你先创建日志目录：
@@ -51,20 +51,20 @@ mkdir -p outputs/logs
 
 1) 复制模板并改路径：
 
-- 模板：`config/schedule/com.hunter.scheduled.plist.example`
-- 目标：`~/Library/LaunchAgents/com.hunter.scheduled.plist`
+- 模板：`config/schedule/com.insightforge.scheduled.plist.example`
+- 目标：`~/Library/LaunchAgents/com.insightforge.scheduled.plist`
 
 2) 加载并启动：
 
 ```bash
-launchctl load -w ~/Library/LaunchAgents/com.hunter.scheduled.plist
-launchctl start com.hunter.scheduled
+launchctl load -w ~/Library/LaunchAgents/com.insightforge.scheduled.plist
+launchctl start com.insightforge.scheduled
 ```
 
 3) 停止/卸载：
 
 ```bash
-launchctl unload -w ~/Library/LaunchAgents/com.hunter.scheduled.plist
+launchctl unload -w ~/Library/LaunchAgents/com.insightforge.scheduled.plist
 ```
 
 ## 方式 D：CI（GitHub Actions）建议

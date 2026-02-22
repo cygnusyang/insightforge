@@ -20,7 +20,7 @@
 ## 快速开始
 
 ```bash
-cd /Users/cygnus/work/github/hunter
+cd /Users/cygnus/work/github/insightforge
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt

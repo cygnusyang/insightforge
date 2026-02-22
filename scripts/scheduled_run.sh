@@ -5,7 +5,7 @@ ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
 LOCK_DIR="${LOCK_DIR:-$ROOT/outputs/.scheduled_run.lock}"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
-  echo "[hunter] $(date -Iseconds) another run in progress; skip"
+  echo "[insightforge] $(date -Iseconds) another run in progress; skip"
   exit 0
 fi
 cleanup() { rmdir "$LOCK_DIR" 2>/dev/null || true; }
@@ -28,25 +28,25 @@ fi
 
 cd "$ROOT"
 
-echo "[hunter] $(date -Iseconds) run pipeline"
+echo "[insightforge] $(date -Iseconds) run pipeline"
 "$PYTHON_BIN" run.py --config "$CONFIG_PATH" --out "$OUT_DIR"
 
-echo "[hunter] $(date -Iseconds) build LLM review pack"
+echo "[insightforge] $(date -Iseconds) build LLM review pack"
 "$PYTHON_BIN" scripts/make_llm_review_pack.py \
   --out "$REVIEW_OUT" \
   --since-days "$SINCE_DAYS" \
   --opportunity-out "$OUT_DIR"
 
 if [[ -n "${OLLAMA_BASE_URL:-}" && -n "${OLLAMA_MODEL:-}" ]]; then
-  echo "[hunter] $(date -Iseconds) call ollama for review"
+  echo "[insightforge] $(date -Iseconds) call ollama for review"
   if ! "$PYTHON_BIN" scripts/ollama_review.py \
     --base-url "$OLLAMA_BASE_URL" \
     --model "$OLLAMA_MODEL" \
     --in "$REVIEW_OUT" \
     --out "$LLM_OUT" \
     --timeout "${OLLAMA_TIMEOUT:-900}"; then
-    echo "[hunter] $(date -Iseconds) ollama failed; keep other outputs"
+    echo "[insightforge] $(date -Iseconds) ollama failed; keep other outputs"
   fi
 fi
 
-echo "[hunter] $(date -Iseconds) done"
+echo "[insightforge] $(date -Iseconds) done"

@@ -3,7 +3,7 @@
 <plist version="1.0">
   <dict>
     <key>Label</key>
-    <string>com.hunter.scheduled</string>
+    <string>com.insightforge.scheduled</string>
 
     <key>ProgramArguments</key>
     <array>
