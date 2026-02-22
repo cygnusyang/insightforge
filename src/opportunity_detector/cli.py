@@ -10,18 +10,35 @@ from .config import load_config
 from .pipeline import run_pipeline
 from .validator import CLIValidator, validate_cli_args
 
+# 默认配置路径
+DEFAULT_CONFIG_PATH = "config/topics.yml"
+DEFAULT_OUTPUT_PATH = "outputs/latest"
+
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="行业/产品机会探测器（多信号融合）")
+    parser = argparse.ArgumentParser(
+        description="行业/产品机会探测器（多信号融合）",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=f"""
+默认配置: {DEFAULT_CONFIG_PATH}
+默认输出: {DEFAULT_OUTPUT_PATH}
+
+示例:
+  python -m src.opportunity_detector.cli              # 使用默认配置
+  python -m src.opportunity_detector.cli --config custom.yml
+  python -m src.opportunity_detector.cli --out custom_output
+  python -m src.opportunity_detector.cli --config custom.yml --out custom_output
+""",
+    )
     parser.add_argument(
         "--config",
-        required=True,
-        help="配置文件路径，如 config/topics.yml",
+        default=DEFAULT_CONFIG_PATH,
+        help=f"配置文件路径，默认 {DEFAULT_CONFIG_PATH}",
     )
     parser.add_argument(
         "--out",
-        default="outputs/latest",
-        help="输出目录，默认 outputs/latest",
+        default=DEFAULT_OUTPUT_PATH,
+        help=f"输出目录，默认 {DEFAULT_OUTPUT_PATH}",
     )
     return parser
 
