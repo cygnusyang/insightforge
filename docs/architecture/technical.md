@@ -23,52 +23,102 @@
 
 ### 高层架构图
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        用户界面层                            │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐       │
-│  │   CLI 界面   │  │  Web 界面    │  │  API 服务    │       │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘       │
-│         │               │               │               │
-└─────────┴───────┬───────┴───────────────┴───────────────┘
-                  │
-┌─────────────────┴───────────────────────────────────────────┐
-│                      应用服务层                             │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐       │
-│  │   任务调度   │  │   配置管理   │  │   日志服务   │       │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘       │
-│         │               │               │               │
-│  ┌──────┴──────┐  ┌──────┴──────┐  ┌──────┴──────┐       │
-│  │   报告生成   │  │   洞察生成   │  │   信号融合   │       │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘       │
-│         │               │               │               │
-└─────────┴───────┬───────┴───────────────┴───────────────┘
-                  │
-┌─────────────────┴───────────────────────────────────────────┐
-│                      业务逻辑层                             │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐       │
-│  │   机会评估   │  │   趋势分析   │  │   数据标准化  │       │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘       │
-│         │               │               │               │
-│  ┌──────┴──────┐  ┌──────┴──────┐  ┌──────┴──────┐       │
-│  │   信号计算   │  │   数据清洗   │  │   事件处理   │       │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘       │
-│         │               │               │               │
-└─────────┴───────┬───────┴───────────────┴───────────────┘
-                  │
-┌─────────────────┴───────────────────────────────────────────┐
-│                      数据采集层                             │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐       │
-│  │   GDELT     │  │   GitHub    │  │  HackerNews │       │
-│  │  连接器     │  │  连接器     │  │   连接器    │       │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘       │
-│         │               │               │               │
-│  ┌──────┴──────┐  ┌──────┴──────┐  ┌──────┴──────┐       │
-│  │   Reddit    │  │   arXiv     │  │  自定义数据源 │       │
-│  │   连接器    │  │   连接器    │  │    插件      │       │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘       │
-│         │               │               │               │
-└─────────┴───────────────┴───────────────┴───────────────┘
+```mermaid
+flowchart TB
+    subgraph "用户界面层"
+        CLI[CLI 界面]
+        Web[Web 界面]
+        API[API 服务]
+    end
+
+    subgraph "应用服务层"
+        Scheduler[任务调度]
+        Config[配置管理]
+        Logging[日志服务]
+        ReportGen[报告生成]
+        InsightGen[洞察生成]
+        SignalFusion[信号融合]
+    end
+
+    subgraph "业务逻辑层"
+        OpportunityEval[机会评估]
+        TrendAnalysis[趋势分析]
+        DataStandardization[数据标准化]
+        SignalCalc[信号计算]
+        DataCleaning[数据清洗]
+        EventProcessing[事件处理]
+    end
+
+    subgraph "数据采集层"
+        GDELT[GDELT 连接器]
+        GitHub[GitHub 连接器]
+        HackerNews[HackerNews 连接器]
+        Reddit[Reddit 连接器]
+        arXiv[arXiv 连接器]
+        Custom[自定义数据源插件]
+    end
+
+    %% 数据流
+    CLI --> Scheduler
+    Web --> Scheduler
+    API --> Scheduler
+
+    Scheduler --> Config
+    Scheduler --> Logging
+
+    Config --> ReportGen
+    Config --> InsightGen
+    Config --> SignalFusion
+
+    ReportGen --> SignalFusion
+    InsightGen --> SignalFusion
+
+    SignalFusion --> SignalCalc
+    SignalCalc --> SignalFusion
+
+    SignalFusion --> OpportunityEval
+    SignalFusion --> TrendAnalysis
+    SignalFusion --> DataStandardization
+
+    DataStandardization --> DataCleaning
+    DataCleaning --> EventProcessing
+
+    EventProcessing --> GDELT
+    EventProcessing --> GitHub
+    EventProcessing --> HackerNews
+    EventProcessing --> Reddit
+    EventProcessing --> arXiv
+    EventProcessing --> Custom
+
+    %% 反向数据流
+    Custom --> EventProcessing
+    arXiv --> EventProcessing
+    Reddit --> EventProcessing
+    HackerNews --> EventProcessing
+    GitHub --> EventProcessing
+    GDELT --> EventProcessing
+
+    style CLI fill:#e1f5ff
+    style Web fill:#e1f5ff
+    style API fill:#e1f5ff
+    style Scheduler fill:#fff3e0
+    style Config fill:#fff3e0
+    style Logging fill:#fff3e0
+    style ReportGen fill:#f3e5f5
+    style InsightGen fill:#f3e5f5
+    style SignalFusion fill:#f3e5f5
+    style OpportunityEval fill:#e8f5e9
+    style TrendAnalysis fill:#e8f5e9
+    style DataStandardization fill:#e8f5e9
+    style SignalCalc fill:#e8f5e9
+    style DataCleaning fill:#e8f5e9
+    style EventProcessing fill:#e8f5e9
+    style GDELT fill:#fce4ec
+    style GitHub fill:#fce4ec
+    style HackerNews fill:#fce4ec
+    style Reddit fill:#fce4ec
+    style arXiv fill:#fce4ec
+    style Custom fill:#fce4ec
 ```
 
 ### 分层说明
@@ -209,19 +259,59 @@ class MarkdownReportGenerator(ReportGenerator):
 ## 数据流设计
 
 ### 数据处理流程
-```
-原始数据 → 数据清洗 → 数据标准化 → 信号计算 → 机会评估 → 报告生成
-    ↓           ↓           ↓           ↓           ↓           ↓
-  数据采集    异常检测    格式统一    权重计算    分数排序    格式输出
-  质量验证    去重处理    时间对齐    趋势分析    类型识别    模板渲染
+
+```mermaid
+flowchart LR
+    RawData[原始数据] --> Cleaning[数据清洗]
+    Cleaning --> Standardization[数据标准化]
+    Standardization --> SignalCalc[信号计算]
+    SignalCalc --> OpportunityEval[机会评估]
+    OpportunityEval --> ReportGen[报告生成]
+
+    subgraph 数据处理步骤
+        direction LR
+        RawData
+        Cleaning[数据清洗<br/>异常检测<br/>去重处理]
+        Standardization[数据标准化<br/>格式统一<br/>时间对齐]
+        SignalCalc[信号计算<br/>权重计算<br/>趋势分析]
+        OpportunityEval[机会评估<br/>分数排序<br/>类型识别]
+        ReportGen[报告生成<br/>格式输出<br/>模板渲染]
+    end
+
+    style RawData fill:#e3f2fd
+    style Cleaning fill:#e3f2fd
+    style Standardization fill:#e3f2fd
+    style SignalCalc fill:#e3f2fd
+    style OpportunityEval fill:#e3f2fd
+    style ReportGen fill:#e3f2fd
 ```
 
 ### 事件处理流程
-```
-事件触发 → 事件分类 → 事件过滤 → 事件分析 → 事件存储 → 事件报告
-    ↓           ↓           ↓           ↓           ↓           ↓
-  数据变化    类型识别    重要性评估  影响分析    持久化      可视化
-  时间检测    来源标记    相关性判断  趋势计算    索引建立    报告生成
+
+```mermaid
+flowchart LR
+    EventTrigger[事件触发] --> EventClass[事件分类]
+    EventClass --> EventFilter[事件过滤]
+    EventFilter --> EventAnalysis[事件分析]
+    EventAnalysis --> EventStore[事件存储]
+    EventStore --> EventReport[事件报告]
+
+    subgraph 事件处理步骤
+        direction LR
+        EventTrigger
+        EventClass[事件分类<br/>类型识别<br/>来源标记]
+        EventFilter[事件过滤<br/>重要性评估<br/>相关性判断]
+        EventAnalysis[事件分析<br/>影响分析<br/>趋势计算]
+        EventStore[事件存储<br/>持久化<br/>索引建立]
+        EventReport[事件报告<br/>可视化<br/>报告生成]
+    end
+
+    style EventTrigger fill:#fff3e0
+    style EventClass fill:#fff3e0
+    style EventFilter fill:#fff3e0
+    style EventAnalysis fill:#fff3e0
+    style EventStore fill:#fff3e0
+    style EventReport fill:#fff3e0
 ```
 
 ## 配置管理
