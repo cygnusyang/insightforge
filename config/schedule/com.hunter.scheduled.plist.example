@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.hunter.scheduled</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <string>/bin/zsh</string>
+      <string>-lc</string>
+      <string>cd /ABS/PATH/TO/hunter &amp;&amp; bash scripts/scheduled_run.sh</string>
+    </array>
+
+    <!-- 每 2 小时运行一次：7200 秒 -->
+    <key>StartInterval</key>
+    <integer>7200</integer>
+
+    <key>StandardOutPath</key>
+    <string>/ABS/PATH/TO/hunter/outputs/logs/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/ABS/PATH/TO/hunter/outputs/logs/launchd.err.log</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+  </dict>
+</plist>

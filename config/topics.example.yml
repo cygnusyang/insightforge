@@ -1,0 +1,38 @@
+window_days: 30
+recent_days: 7
+
+daily_days: 1
+daily_max_items_per_topic: 10
+daily_max_gdelt_items: 12
+daily_enable_biz_event_queries: true
+daily_gdelt_biz_query_max_records: 6
+daily_max_papers_per_topic: 2
+daily_enable_paper_summaries: true
+daily_enable_pdf_summaries: false
+daily_max_paper_pdfs: 2
+daily_pdf_max_pages: 4
+papers_cache_dir: outputs/papers_cache
+
+weights:
+  demand: 0.45
+  momentum: 0.35
+  competition: 0.20
+
+topics:
+  - "AI coding agent"
+  - "vertical saas for clinics"
+  - "workflow automation for logistics"
+  - "SMB finance ops"
+  - "B2B customer support copilot"
+
+# 可选：为每个 topic 补充同义词/关键词（用于事件归因与降噪，不改变 topics 列表本身）
+topic_keywords:
+  "SMB finance ops":
+    - "accounting"
+    - "reconciliation"
+    - "month end close"
+    - "invoice"
+  "B2B customer support copilot":
+    - "helpdesk"
+    - "ticketing"
+    - "SLA"

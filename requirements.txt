@@ -1,0 +1,8 @@
+httpx>=0.27.0
+pydantic>=2.7.0
+PyYAML>=6.0.1
+rich>=13.7.1
+tenacity>=8.3.0
+python-dateutil>=2.9.0
+pypdf>=5.2.0
+pytest>=8.2.0
