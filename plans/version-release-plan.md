@@ -31,7 +31,7 @@
 | FUNC-014 | 主题配置 | 高 | ✅ 已实现 | YAML配置支持 |
 | FUNC-015 | 时间窗口配置 | 高 | ✅ 已实现 | window_days/recent_days |
 | FUNC-016 | 权重配置 | 高 | ✅ 已实现 | weights配置 |
-| FUNC-017 | CLI接口 | 高 | ✅ 已实现 | argparse实现 |
+| FUNC-017 | CLI接口 | 高 | ✅ 已实现 | argparse实现 |是吧？最后
 | FUNC-018 | 参数验证 | 中 | ⚠️ 部分实现 | 基础验证，缺少组合验证 |
 | FUNC-019 | 实时监控 | 低 | ❌ 未实现 | 待规划 |
 | FUNC-020 | Web界面 | 低 | ❌ 未实现 | 待规划 |

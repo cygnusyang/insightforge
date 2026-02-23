@@ -15,6 +15,16 @@
 | test_validate_cli_args_valid | FUNC-018 | 有效 CLI 参数组合 |
 | test_validate_cli_args_invalid_config | FUNC-018 | 无效配置文件路径 |
 | test_validate_cli_args_invalid_output | FUNC-018 | 无效输出路径 |
+| test_validate_yaml_syntax_valid | FUNC-018 | 有效 YAML 语法 |
+| test_validate_yaml_syntax_invalid | FUNC-018 | 无效 YAML 语法 |
+| test_validate_required_fields | FUNC-018 | 必需字段验证 |
+| test_validate_value_ranges | FUNC-018 | 值范围验证 |
+| test_validate_parameter_dependencies | FUNC-018 | 参数依赖关系 |
+| test_validate_parameter_exclusions | FUNC-018 | 参数互斥 |
+| test_validate_config_path_safety_valid | FUNC-018 | 配置文件路径安全（有效） |
+| test_validate_config_path_safety_invalid | FUNC-018 | 配置文件路径安全（无效） |
+| test_format_validation_errors | FUNC-018 | 错误信息格式化 |
+| test_generate_fix_suggestions | FUNC-018 | 修复建议生成 |
 """
 
 from __future__ import annotations
@@ -27,6 +37,9 @@ import pytest
 
 from src.opportunity_detector.validator import (
     CLIValidator,
+    ConfigFileValidator,
+    format_validation_errors,
+    generate_fix_suggestions,
     validate_cli_args,
     ValidationResult,
 )
@@ -215,3 +228,282 @@ class TestValidationResult:
         # 这里只验证属性存在性
         assert hasattr(result, 'is_valid')
         assert hasattr(result, 'message')
+
+
+class TestConfigFileValidator:
+    """ConfigFileValidator 类的验证测试"""
+    
+    def test_validate_yaml_syntax_valid(self) -> None:
+        """测试有效 YAML 语法
+        
+        需求: FUNC-018
+        验证: 有效的 YAML 语法应返回成功
+        """
+        content = "key: value\nnested:\n  - item1\n  - item2"
+        result = ConfigFileValidator.validate_yaml_syntax(content)
+        assert result.is_valid is True
+        assert "有效" in result.message
+    
+    def test_validate_yaml_syntax_invalid(self) -> None:
+        """测试无效 YAML 语法
+        
+        需求: FUNC-018
+        验证: 无效的 YAML 语法应返回失败
+        """
+        content = "key: value: invalid\n  - nested: item"
+        result = ConfigFileValidator.validate_yaml_syntax(content)
+        assert result.is_valid is False
+        assert "错误" in result.message
+    
+    def test_validate_yaml_syntax_with_special_chars(self) -> None:
+        """测试包含特殊字符的 YAML 语法
+        
+        需求: FUNC-018
+        验证: 包含特殊字符的有效 YAML 应返回成功
+        """
+        content = "key: 'value with special chars: []{}'"
+        result = ConfigFileValidator.validate_yaml_syntax(content)
+        assert result.is_valid is True
+    
+    def test_validate_required_fields_all_present(self) -> None:
+        """测试所有必需字段都存在
+        
+        需求: FUNC-018
+        验证: 包含所有必需字段的配置应返回成功
+        """
+        payload = {
+            "window_days": 30,
+            "recent_days": 7,
+            "weights": {"demand": 0.5, "momentum": 0.3, "competition": 0.2},
+            "topics": ["topic1"],
+            "topic_keywords": {"topic1": ["kw1"]}
+        }
+        result = ConfigFileValidator.validate_required_fields(payload)
+        assert result.is_valid is True
+        assert "所有必需字段" in result.message
+    
+    def test_validate_required_fields_missing(self) -> None:
+        """测试缺少必需字段
+        
+        需求: FUNC-018
+        验证: 缺少必需字段的配置应返回失败
+        """
+        payload = {"key": "value"}
+        result = ConfigFileValidator.validate_required_fields(payload)
+        assert result.is_valid is False
+        assert "缺少必需字段" in result.message
+    
+    def test_validate_value_ranges_valid(self) -> None:
+        """测试值范围验证通过
+        
+        需求: FUNC-018
+        验证: 值在有效范围内的配置应返回成功
+        """
+        payload = {
+            "window_days": 30,
+            "recent_days": 7,
+            "daily_days": 1,
+            "daily_max_items_per_topic": 5,
+            "daily_max_gdelt_items": 20
+        }
+        result = ConfigFileValidator.validate_value_ranges(payload)
+        assert result.is_valid is True
+        assert "有效范围内" in result.message
+    
+    def test_validate_value_ranges_invalid_window_days(self) -> None:
+        """测试 window_days 超出范围
+        
+        需求: FUNC-018
+        验证: window_days 超出 7-365 范围应返回失败
+        """
+        payload = {"window_days": 5}
+        result = ConfigFileValidator.validate_value_ranges(payload)
+        assert result.is_valid is False
+        assert "window_days" in result.message
+    
+    def test_validate_value_ranges_invalid_recent_days(self) -> None:
+        """测试 recent_days 小于 1
+        
+        需求: FUNC-018
+        验证: recent_days 小于 1 应返回失败
+        """
+        payload = {"recent_days": 0}
+        result = ConfigFileValidator.validate_value_ranges(payload)
+        assert result.is_valid is False
+        assert "recent_days" in result.message
+    
+    def test_validate_value_ranges_invalid_daily_days(self) -> None:
+        """测试 daily_days 超出范围
+        
+        需求: FUNC-018
+        验证: daily_days 超出 1-7 范围应返回失败
+        """
+        payload = {"daily_days": 10}
+        result = ConfigFileValidator.validate_value_ranges(payload)
+        assert result.is_valid is False
+        assert "daily_days" in result.message
+    
+    def test_validate_value_ranges_invalid_daily_max_items_per_topic(self) -> None:
+        """测试 daily_max_items_per_topic 超出范围
+        
+        需求: FUNC-018
+        验证: daily_max_items_per_topic 超出 1-10 范围应返回失败
+        """
+        payload = {"daily_max_items_per_topic": 15}
+        result = ConfigFileValidator.validate_value_ranges(payload)
+        assert result.is_valid is False
+        assert "daily_max_items_per_topic" in result.message
+    
+    def test_validate_value_ranges_invalid_daily_max_gdelt_items(self) -> None:
+        """测试 daily_max_gdelt_items 超出范围
+        
+        需求: FUNC-018
+        验证: daily_max_gdelt_items 超出 1-50 范围应返回失败
+        """
+        payload = {"daily_max_gdelt_items": 60}
+        result = ConfigFileValidator.validate_value_ranges(payload)
+        assert result.is_valid is False
+        assert "daily_max_gdelt_items" in result.message
+
+
+class TestCLIParameterValidation:
+    """CLI 参数组合验证测试"""
+    
+    def test_validate_parameter_dependencies_valid(self) -> None:
+        """测试有效的参数依赖关系
+        
+        需求: FUNC-018
+        验证: 具有有效参数依赖关系的配置应返回成功
+        """
+        import argparse
+        args = argparse.Namespace(config="config.yml", out="output")
+        result = CLIValidator.validate_parameter_dependencies(args)
+        assert result.is_valid is True
+    
+    def test_validate_parameter_dependencies_invalid_config(self) -> None:
+        """测试无效的参数依赖关系（配置路径为空）
+        
+        需求: FUNC-018
+        验证: 配置路径为空应返回失败
+        """
+        import argparse
+        args = argparse.Namespace(config=None, out="output")
+        result = CLIValidator.validate_parameter_dependencies(args)
+        assert result.is_valid is False
+    
+    def test_validate_parameter_exclusions(self) -> None:
+        """测试参数互斥
+        
+        需求: FUNC-018
+        验证: 无互斥参数时应返回成功
+        """
+        import argparse
+        args = argparse.Namespace()
+        result = CLIValidator.validate_parameter_exclusions(args)
+        assert result.is_valid is True
+
+
+class TestConfigPathSecurity:
+    """配置文件路径安全验证测试"""
+    
+    def test_validate_config_path_safety_valid(self) -> None:
+        """测试有效的配置文件路径
+        
+        需求: FUNC-018
+        验证: 在允许目录范围内的路径应返回成功
+        """
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = str(Path(tmpdir) / "config.yml")
+            result = CLIValidator.validate_config_path_safety(
+                config_path, [tmpdir]
+            )
+            assert result.is_valid is True
+    
+    def test_validate_config_path_safety_invalid(self) -> None:
+        """测试无效的配置文件路径
+        
+        需求: FUNC-018
+        验证: 不在允许目录范围内的路径应返回失败
+        """
+        result = CLIValidator.validate_config_path_safety(
+            "/etc/passwd", ["/allowed/path"]
+        )
+        assert result.is_valid is False
+        assert "不在允许的目录范围内" in result.message
+
+
+class TestValidationFeedback:
+    """验证结果反馈测试"""
+    
+    def test_format_validation_errors(self) -> None:
+        """测试错误信息格式化
+        
+        需求: FUNC-018
+        验证: 错误信息应被正确格式化
+        """
+        errors = ["error1", "error2"]
+        formatted = format_validation_errors(errors)
+        assert "error1" in formatted
+        assert "error2" in formatted
+        assert "验证失败" in formatted
+    
+    def test_format_validation_errors_empty(self) -> None:
+        """测试空错误列表格式化
+        
+        需求: FUNC-018
+        验证: 空错误列表应返回空字符串
+        """
+        errors = []
+        formatted = format_validation_errors(errors)
+        assert formatted == ""
+    
+    def test_generate_fix_suggestions_yaml_syntax(self) -> None:
+        """测试 YAML 语法错误的修复建议
+        
+        需求: FUNC-018
+        验证: 应返回正确的修复建议
+        """
+        suggestions = generate_fix_suggestions("yaml_syntax")
+        assert len(suggestions) > 0
+        assert "缩进" in suggestions[0] or "缩进" in suggestions[1]
+    
+    def test_generate_fix_suggestions_required_fields(self) -> None:
+        """测试必需字段缺失的修复建议
+        
+        需求: FUNC-018
+        验证: 应返回正确的修复建议
+        """
+        suggestions = generate_fix_suggestions("required_fields")
+        assert len(suggestions) > 0
+        assert "必需字段" in suggestions[0] or "必需字段" in suggestions[1]
+    
+    def test_generate_fix_suggestions_value_ranges(self) -> None:
+        """测试值范围错误的修复建议
+        
+        需求: FUNC-018
+        验证: 应返回正确的修复建议
+        """
+        suggestions = generate_fix_suggestions("value_ranges")
+        assert len(suggestions) > 0
+        assert "范围" in suggestions[0] or "范围" in suggestions[1]
+    
+    def test_generate_fix_suggestions_path_security(self) -> None:
+        """测试路径安全错误的修复建议
+        
+        需求: FUNC-018
+        验证: 应返回正确的修复建议
+        """
+        suggestions = generate_fix_suggestions("path_security")
+        assert len(suggestions) > 0
+        assert "目录" in suggestions[0] or "路径" in suggestions[1]
+    
+    def test_generate_fix_suggestions_unknown(self) -> None:
+        """测试未知错误类型的修复建议
+        
+        需求: FUNC-018
+        验证: 应返回默认的修复建议
+        """
+        suggestions = generate_fix_suggestions("unknown_type")
+        assert len(suggestions) > 0
+        assert "配置文件格式" in suggestions[0]

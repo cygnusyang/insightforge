@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -57,6 +57,28 @@ class PaperConfig(BaseModel):
     cache_dir: str = "outputs/papers_cache"
 
 
+class AlertConfig(BaseModel):
+    """告警配置"""
+    enable: bool = True
+    failure_rate_threshold: float = Field(default=0.1, ge=0, le=1)  # 10%
+    processing_time_threshold_seconds: float = Field(default=30.0, ge=0)
+    cooldown_minutes: int = Field(default=5, ge=1)
+    
+    # 邮件配置
+    email_enabled: bool = False
+    smtp_host: str = ""
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_user: str = ""
+    smtp_password: str = ""
+    from_address: str = ""
+    to_addresses: List[str] = Field(default_factory=list)
+    
+    # Webhook配置
+    webhook_enabled: bool = False
+    webhook_url: str = ""
+    webhook_secret: str = ""
+
+
 class DetectorConfig(BaseModel):
     window_days: int = Field(default=30, ge=7, le=365)
     recent_days: int = Field(default=7, ge=1)  # le=30 removed to allow custom validation
@@ -77,6 +99,9 @@ class DetectorConfig(BaseModel):
     
     # Paper config (new in FUNC-005A/B)
     paper_config: PaperConfig = PaperConfig()
+    
+    # Alert config (new in FUNC-019)
+    alert_config: AlertConfig = AlertConfig()
 
     @field_validator("topics")
     @classmethod

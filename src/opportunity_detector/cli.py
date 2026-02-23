@@ -40,7 +40,47 @@ def _build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_OUTPUT_PATH,
         help=f"输出目录，默认 {DEFAULT_OUTPUT_PATH}",
     )
+    parser.add_argument(
+        "--monitor",
+        action="store_true",
+        help="启用监控模式",
+    )
+    parser.add_argument(
+        "--alert-test",
+        action="store_true",
+        help="测试告警通知",
+    )
+    parser.add_argument(
+        "--alert-receivers",
+        nargs="+",
+        choices=["email", "webhook"],
+        help="告警接收者类型 (email, webhook)",
+    )
     return parser
+
+
+def _test_alert(config) -> None:
+    """测试告警通知"""
+    from .alert import AlertConfig, AlertManager, AlertLevel
+    
+    console = Console()
+    
+    # 创建告警管理器
+    alert_config = config.alert_config if hasattr(config, "alert_config") else AlertConfig()
+    manager = AlertManager(alert_config)
+    
+    # 创建测试告警
+    alert = manager.create_alert(
+        level=AlertLevel.WARNING,
+        message="这是一条测试告警消息",
+        rule="test_rule",
+    )
+    
+    if alert:
+        console.print(f"[green]✓ 测试告警创建成功: {alert.id}[/green]")
+        console.print(f"[green]✓ 告警消息: {alert.message}[/green]")
+    else:
+        console.print("[yellow]告警功能已禁用[/yellow]")
 
 
 def main() -> None:
@@ -56,7 +96,14 @@ def main() -> None:
         return
 
     config = load_config(args.config)
-    _, scored = run_pipeline(config, Path(args.out))
+    
+    # 测试告警
+    if args.alert_test:
+        _test_alert(config)
+        return
+    
+    # 运行管道
+    _, scored = run_pipeline(config, Path(args.out), enable_monitor=args.monitor)
 
     console = Console()
     table = Table(title="机会排名（按分数降序）")

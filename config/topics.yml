@@ -69,6 +69,7 @@ topics:
   - "workflow automation for logistics"
   - "SMB finance ops"
   - "B2B customer support copilot"
+  - "AI investment direction"
 
 topic_keywords:
   # AI 编程助手相关主题
@@ -96,3 +97,12 @@ topic_keywords:
     - "b2b support"
     - "customer copilot"
     - "enterprise support"
+  # AI 投资方向相关主题
+  "AI investment direction":
+    - "ai investment"
+    - "artificial intelligence funding"
+    - "ai startup"
+    - "ai venture capital"
+    - "ai market size"
+    - "ai growth trends"
+    - "ai industry analysis"

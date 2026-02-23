@@ -4,11 +4,13 @@ import asyncio
 import csv
 import logging
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Tuple
 
 import httpx
+from rich.console import Console
 
 from .config import DetectorConfig
 from .connectors import (
@@ -25,6 +27,12 @@ from .insights import (
     render_daily_brief_markdown,
     render_insights_markdown,
 )
+from .smart_pipeline import build_smart_topic_insights_sync
+from .paper_collector import collect_papers_batch
+from .paper_evaluator import evaluate_papers
+from .insight_extractor import extract_paper_insights
+from .paper_insight_reporter import generate_paper_insight_report
+from .monitor import Monitor
 from .papers import build_paper_summaries, render_paper_summaries_markdown
 from .models import TopicRawSignals, TopicScored
 
@@ -155,17 +163,40 @@ def _write_report(path: Path, scored: list[TopicScored], config: DetectorConfig)
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
-def run_pipeline(config: DetectorConfig, out_dir: str | Path) -> tuple[list[TopicRawSignals], list[TopicScored]]:
+def run_pipeline(config: DetectorConfig, out_dir: str | Path, enable_monitor: bool = False) -> tuple[list[TopicRawSignals], list[TopicScored]]:
     output_dir = Path(out_dir)
+    
+    # 初始化监控器
+    monitor = None
+    if enable_monitor:
+        alert_config = getattr(config, "alert_config", None)
+        if alert_config:
+            monitor = Monitor(
+                failure_rate_threshold=alert_config.failure_rate_threshold,
+                processing_time_threshold=alert_config.processing_time_threshold_seconds,
+            )
+        else:
+            monitor = Monitor()
+    
+    # 开始监控
+    if monitor:
+        monitor.start()
+    
     raw_signals = asyncio.run(collect_signals(config))
     scored = score_topics(raw_signals, config.weights)
-    insights = build_topic_insights(raw_signals, scored)
+    # 使用智能洞察生成器（支持LLM增强）
+    insights = build_smart_topic_insights_sync(raw_signals, scored)
     events = asyncio.run(collect_events(config))
     as_of = datetime.now()
     events, paper_summaries, paper_stats = asyncio.run(
         build_paper_summaries(events=events, config=config, as_of=as_of)
     )
-
+    
+    # 停止监控并记录处理时间
+    if monitor:
+        processing_time = monitor.stop()
+        monitor.record_processing_time("pipeline", processing_time)
+    
     raw_rows = [row.to_dict() for row in raw_signals]
     score_rows = [row.to_dict() for row in scored]
     insight_rows = [item.to_dict() for item in insights]
@@ -205,5 +236,31 @@ def run_pipeline(config: DetectorConfig, out_dir: str | Path) -> tuple[list[Topi
     (output_dir / "paper_summaries.md").write_text(
         render_paper_summaries_markdown(paper_summaries, as_of=as_of), encoding="utf-8"
     )
+    
+    # 论文洞察功能（FUNC-021）
+    paper_events = [item for item in events if item.source == "arxiv" or "arxiv.org/" in (item.url or "")]
+    if paper_events:
+        # 评估论文价值
+        assessments = asyncio.run(evaluate_papers(paper_events[:10]))  # 最多10篇
+        # 提取洞察
+        insight_reports = asyncio.run(extract_paper_insights(assessments))
+        # 生成报告
+        paper_insight_path = generate_paper_insight_report(
+            insight_reports,
+            output_dir=output_dir,
+            date=as_of,
+        )
+        logger.info(f"论文洞察报告已生成：{paper_insight_path}")
+    
+    # 打印监控摘要
+    if monitor:
+        summary = monitor.get_summary()
+        console = Console()
+        console.print("\n[bold]监控摘要[/bold]")
+        console.print(f"  健康状态: {'✓ 正常' if summary['is_healthy'] else '⚠ 警告'}")
+        console.print(f"  指标数量: {summary['metrics_count']}")
+        console.print(f"  告警数量: {summary['alerts_count']}")
+        for source, stats in summary['source_success_rates'].items():
+            console.print(f"  {source} 成功率: {stats['success_rate']*100:.1f}%")
 
     return raw_signals, scored
